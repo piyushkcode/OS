@@ -1,0 +1,170 @@
+#!/bin/bash
+selection=1
+a=6
+while [ "$selection" -le "$a" ]
+do
+    echo -e "MENU\n 1)Create address book\n 2)View address book\n 3)Insert a record\n 4)Search a record\n 5)Delete a record\n 6)Modify a record\n 7)Exit\n Enter your choice: \c"
+    read choice
+
+    create() {
+        touch File3.txt
+        echo -e "RollNo\t Name\t Phone-Number\t Address\n" > File3.txt
+    }
+
+    insert() {
+        echo -n "RollNo: "
+        read roll
+        echo -n "Name: "
+        read name
+        echo -n "Phone: "
+        while true
+        do
+            read phone
+            len=$(echo -n $phone | wc -m)
+            if [ $len -eq 10 ]; then
+                break
+            else
+                echo -e "\n Please enter a 10-digit number \n"
+            fi
+        done
+        echo -n "Address: "
+        read address
+        echo -e "$roll\t $name\t $phone\t\t $address" >> File3.txt
+    }
+
+    search() {
+        echo -e "Choose the field to search by:\n1) RollNo\n2) Name\n3) Phone Number\n4) Address"
+        read field_choice
+
+        case $field_choice in
+            1) 
+                echo -n "Enter RollNo to search: "
+                read search_term
+                grep -i -w "$search_term" File3.txt ;;
+            2)
+                echo -n "Enter Name to search: "
+                read search_term
+                grep -i -w "$search_term" File3.txt ;;
+            3)
+                echo -n "Enter Phone Number to search: "
+                read search_term
+                grep -i -w "$search_term" File3.txt ;;
+            4)
+                echo -n "Enter Address to search: "
+                read search_term
+                grep -i -w "$search_term" File3.txt ;;
+            *)
+                echo "Invalid choice!" ;;
+        esac
+    }
+
+    delete() {
+        echo -e "Choose the field to delete by:\n1) RollNo\n2) Name\n3) Phone Number\n4) Address"
+        read field_choice
+
+        case $field_choice in
+            1) 
+                echo -n "Enter RollNo to delete: "
+                read delete_term ;;
+            2)
+                echo -n "Enter Name to delete: "
+                read delete_term ;;
+            3)
+                echo -n "Enter Phone Number to delete: "
+                read delete_term ;;
+            4)
+                echo -n "Enter Address to delete: "
+                read delete_term ;;
+            *)
+                echo "Invalid choice!"
+                return ;;
+        esac
+
+        grep -q -w "$delete_term" File3.txt
+        if [ $? -ne 0 ]; then
+            echo "Record Not found"
+        else
+            grep -v -i -w "$delete_term" File3.txt > File2.txt
+            mv File2.txt File3.txt
+            echo "Record Deleted"
+        fi
+    }
+
+   modify() {
+    echo -e "Choose the field to identify the record:\n1) RollNo\n2) Name\n3) Phone Number\n4) Address"
+    read field_choice
+
+    case $field_choice in
+        1) 
+            echo -n "Enter RollNo: "
+            read search_term ;;
+        2)
+            echo -n "Enter Name: "
+            read search_term ;;
+        3)
+            echo -n "Enter Phone Number: "
+            read search_term ;;
+        4)
+            echo -n "Enter Address: "
+            read search_term ;;
+        *)
+            echo "Invalid choice!"; return ;;
+    esac
+
+    grep -q -w "$search_term" File3.txt
+    if [ $? -ne 0 ]; then
+        echo "Record not found."
+    else
+        record=$(grep -i -w "$search_term" File3.txt)
+        old_roll=$(echo $record | cut -f1)
+        old_name=$(echo $record | cut -f2)
+        old_phone=$(echo $record | cut -f3)
+        old_address=$(echo $record | cut -f4)
+
+        echo -e "Record found: $record"
+        
+        # Directly prompt for the field to modify without asking again
+        echo -e "Enter the new value for the field:"
+        echo -n "RollNo [$old_roll]: "
+        read new_roll
+        echo -n "Name [$old_name]: "
+        read new_name
+        echo -n "Phone Number [$old_phone]: "
+        read new_phone
+        echo -n "Address [$old_address]: "
+        read new_address
+
+        # If the user leaves a field blank, retain the old value
+        new_roll=${new_roll:-$old_roll}
+        new_name=${new_name:-$old_name}
+        new_phone=${new_phone:-$old_phone}
+        new_address=${new_address:-$old_address}
+
+        grep -v -i -w "$search_term" File3.txt > temp.txt
+        mv temp.txt File3.txt
+        echo -e "$new_roll\t$new_name\t$new_phone\t$new_address" >> File3.txt
+        echo "Record modified."
+    fi
+}
+
+
+    case "$choice" in
+        1) create ;;
+        2) cat File3.txt ;;
+        3)
+            x=1
+            y=1
+            while [ "$x" -eq "$y" ]
+            do    
+                insert
+                echo -e "Do you want to add another record?\nPress 1 to continue\nPress 2 to discontinue: \c"
+                read x
+            done
+            ;;
+        4) search ;;
+        5) delete ;;
+        6) modify ;;
+        7) selection=$((a + 1)) ;;
+        *) echo "Invalid choice!!!" ;;
+    esac
+done
